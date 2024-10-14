@@ -83,7 +83,7 @@ def predict_text_type(text, model_type='Logistic Regression'):
         processed_text_reshaped = processed_text.reshape(processed_text.shape[0], 1, processed_text.shape[1])
         prediction = model.predict(processed_text_reshaped)
 
-        return 'AI Generated' if prediction > 0.5 else 'Human Written', prediction.item()*100 if prediction > 0.5 else (1-prediction.item())*100
+        return 'AI Generated' if prediction > 0.5 else 'Human Written', prediction.item()*100 if prediction > 0.5 else (1-prediction.item())*100, None
 
     
 # Function to extract text from PDF
@@ -123,7 +123,8 @@ if not text == "":
         result, confidence, plt = predict_text_type(text, model_choice)
         st.write(f"Prediction: {result}")
         st.write(f"Confidence: {confidence:.2f}%")
-        st.pyplot(plt)
+        if not plt == None:
+            st.pyplot(plt)
 else:
     pass
 

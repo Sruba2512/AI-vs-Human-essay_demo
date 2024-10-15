@@ -107,8 +107,9 @@ if option == "Upload PDF":
     uploaded_file = st.file_uploader("Upload a PDF file", type=["pdf"])
     if uploaded_file is not None:
         text = extract_text_from_pdf(uploaded_file)
-        st.write("Extracted Text from PDF:")
-        st.write(text)
+        #st.write("Extracted Text from PDF:")
+        with st.expander('Expand to see extracted text retrieved from PDF'):
+            st.write(text)
 
 # If text input is selected
 else:

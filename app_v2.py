@@ -4,11 +4,28 @@ import pickle
 import re
 import numpy as np
 import matplotlib.pyplot as plt
+import re
+import nltk
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize
+from nltk.stem import WordNetLemmatizer
 # For text preprocessing (if necessary)
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.linear_model import LogisticRegression
 import tensorflow as tf
+
+
+# To download the Punkt tokenizer model
+nltk.download('punkt')
+nltk.download('punkt_tab')
+# To download the list of stopwords
+nltk.download('stopwords')
+
+# To download the WordNet lexical database
+nltk.download('wordnet')
+
+
 
 # Dummy function to detect if text is AI generated (Replace with actual model predictions)
 def predict_text_type(text, model_type='Logistic Regression'):
@@ -27,7 +44,7 @@ def predict_text_type(text, model_type='Logistic Regression'):
     vectorizer = pickle.load(open('tf_idf.pkl', 'rb'))  # Load the vectorizer for the model
     processed_text = vectorizer.transform([text]).toarray()     
 
-    if not model_type == 'RNN':
+    if not model_type == 'LSTM':
         # Get the prediction
         prediction = model.predict(processed_text)
         
@@ -95,6 +112,38 @@ def extract_text_from_pdf(pdf_file):
         text += page.extract_text()
     return text
 
+
+def preprocess_text(text):
+
+    # To convert the text to lowercase
+    text = text.lower()
+
+    # To remove HTML tags from the text
+    text = re.sub('<.*?>', '', text)
+
+    # To remove URLs from the text
+    text = re.sub(r'http\S+', '', text)
+
+    # To remove special characters and numbers from the text
+    text = re.sub('[^a-zA-Z\s]', '', text)
+
+    # To tokenize the text
+    tokens = word_tokenize(text)
+
+    # To remove stopwords
+    stop_words = set(stopwords.words('english'))
+    tokens = [token for token in tokens if token not in stop_words]
+
+    # To lemmatize each token
+    lemmatizer = WordNetLemmatizer()
+    tokens = [lemmatizer.lemmatize(token) for token in tokens]
+
+    # To rejoin tokens into a single string
+    processed_text = ' '.join(tokens)
+
+    return processed_text
+
+
 # Streamlit Interface
 st.title("AI vs Human Text Detector")
 
@@ -108,23 +157,26 @@ if option == "Upload PDF":
     if uploaded_file is not None:
         text = extract_text_from_pdf(uploaded_file)
         #st.write("Extracted Text from PDF:")
-        with st.expander('Expand to see extracted text retrieved from PDF'):
+        with st.expander('Expand to see extracted Text from PDF'):
             st.write(text)
 
 # If text input is selected
 else:
     text = st.text_area("Enter your text here:")
 
-# Choose the model for detection
-model_choice = st.selectbox("Choose a model for prediction:", ("Naive Bayes", "Logistic Regression", "RNN"))
 
 # Once text is available, proceed with prediction
 if not text == "":
+    processed_text = preprocess_text(text)
+    with st.expander("See processed text"):
+        st.write(processed_text)
+    # Choose the model for detection
+    model_choice = st.selectbox("Choose a model for prediction:", ("Naive Bayes", "Logistic Regression", "LSTM"))
     if st.button("Detect Text Type"):
-        result, confidence, plt = predict_text_type(text, model_choice)
+        result, confidence, plt = predict_text_type(processed_text, model_choice)
         st.write(f"Prediction: {result}")
         st.write(f"Confidence: {confidence:.2f}%")
-        if not plt == None:
+        if not plt is None:
             st.pyplot(plt)
 else:
     pass
